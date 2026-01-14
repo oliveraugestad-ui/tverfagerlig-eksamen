@@ -1,7 +1,7 @@
 const SUPABASE_URL = "https://bhpbssjrnpavisxhfiez.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJocGJzc2pybnBhdmlzeGhmaWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNjM2NzMsImV4cCI6MjA4MzkzOTY3M30.H49jZC_LHsL2ouMcTRW71cJAvjYYlRNBnG9omdkG0zA";
 
-const supabaseClient = supabase.createClient(
+const _supabase = supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY
 );
@@ -32,7 +32,7 @@ async function login() {
     const email = document.getElementById("username").value;
     const password = document.getElementById("password").value;
 
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
+    const { data, error } = await _. supabase.auth.signInWithPassword({
         email,
         password
     });
