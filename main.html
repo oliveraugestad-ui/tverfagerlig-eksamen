@@ -4,51 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Utstyr</title>
+
     <link rel="stylesheet" href="style.css">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
 <h1>Utstyr</h1>
 
-<div class="grid">
-    <div class="item" onclick="toggle(this)">
-        <h3>Mac</h3>
-        <p class="status">Ikke valgt</p>
-    </div>
+<div class="grid" id="equipmentGrid"></div>
 
-    <div class="item" onclick="toggle(this)">
-        <h3>iPhone 16 Pro Max</h3>
-        <p class="status">Ikke valgt</p>
-    </div>
-
-    <div class="item" onclick="toggle(this)">
-        <h3>iPad Pro</h3>
-        <p class="status">Ikke valgt</p>
-    </div>
-
-    <div class="item" onclick="toggle(this)">
-        <h3>AirPods Pro</h3>
-        <p class="status">Ikke valgt</p>
-    </div>
-
-    <div class="item" onclick="toggle(this)">
-        <h3>Apple Watch</h3>
-        <p class="status">Ikke valgt</p>
-    </div>
-
-    <div class="item" onclick="toggle(this)">
-        <h3>Lader</h3>
-        <p class="status">Ikke valgt</p>
-    </div>
-</div>
-
-<script>
-    function toggle(el) {
-        el.classList.toggle("active");
-        el.querySelector(".status").innerText =
-            el.classList.contains("active") ? "Valgt" : "Ikke valgt";
-    }
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
