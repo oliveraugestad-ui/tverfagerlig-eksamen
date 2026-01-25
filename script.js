@@ -49,17 +49,16 @@ async function login() {
     window.location.href = "main.html";
 }
 
-let grid = null;
 
-//  Hent utstyr fra Supabase
+// 🔽 Last utstyr fra Supabase
 async function loadEquipment() {
-    grid = document.getElementById("equipmentGrid");
-    
+    const grid = document.getElementById("equipmentGrid");
+
     if (!grid) {
-        console.error("Feil: equipmentGrid-elementet finnes ikke");
+        console.error("Fant ikke equipmentGrid");
         return;
     }
-    
+
     const { data, error } = await supabaseClient
         .from("equipment")
         .select("*")
@@ -73,37 +72,38 @@ async function loadEquipment() {
     grid.innerHTML = "";
 
     data.forEach(item => {
-        const div = document.createElement("div");
-        div.className = "item";
+        const row = document.createElement("div");
+        row.className = "item-row";
 
-        div.innerHTML = `
-            <h3>${item.name}</h3>
-            <small>Varenr: ${item.item_number}</small>
-
-            <ul class="status-list">
-                <li class="not-selected">Ikke valgt</li>
-            </ul>
+        row.innerHTML = `
+            <div class="cell name">${item.name}</div>
+            <div class="cell number">${item.item_number}</div>
+            <div class="cell status not-selected">Ikke valgt</div>
         `;
 
-        div.addEventListener("click", () => toggle(div));
-        grid.appendChild(div);
+        row.addEventListener("click", () => toggle(row));
+        grid.appendChild(row);
     });
 }
 
 // ✔️ Valgt / ikke valgt
-function toggle(element) {
-    const li = element.querySelector("li");
+function toggle(row) {
+    const status = row.querySelector(".status");
 
-    element.classList.toggle("active");
+    row.classList.toggle("active");
 
-    if (element.classList.contains("active")) {
-        li.textContent = "Valgt";
-        li.className = "selected";
+    if (row.classList.contains("active")) {
+        status.textContent = "Valgt";
+        status.classList.remove("not-selected");
+        status.classList.add("selected");
     } else {
-        li.textContent = "Ikke valgt";
-        li.className = "not-selected";
+        status.textContent = "Ikke valgt";
+        status.classList.remove("selected");
+        status.classList.add("not-selected");
     }
 }
 
-// 🚀 Start
-loadEquipment();
+// 🚀 Kjør når siden er lastet
+document.addEventListener("DOMContentLoaded", () => {
+    loadEquipment();
+});
