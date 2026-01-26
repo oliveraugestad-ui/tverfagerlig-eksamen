@@ -49,23 +49,30 @@ async function login() {
     window.location.href = "main.html";
 }
 
+// 🔑 Hent innlogget bruker
+async function getUser() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    return user;
+}
 
-// 🔽 Last utstyr fra Supabase
+// 🔽 Last utstyr
 async function loadEquipment() {
     const grid = document.getElementById("equipmentGrid");
+    if (!grid) return;
 
-    if (!grid) {
-        console.error("Fant ikke equipmentGrid");
+    const user = await getUser();
+    if (!user) {
+        alert("Du må være logget inn");
         return;
     }
 
     const { data, error } = await supabaseClient
         .from("equipment")
-        .select("*")
-        .order("item_number");
+        .select("id_utstyr, tekst, utstyr_nummer, loaned, loaned_by")
+        .order("utstyr_nummer");
 
     if (error) {
-        console.error("Supabase-feil:", error);
+        console.error(error);
         return;
     }
 
@@ -74,36 +81,69 @@ async function loadEquipment() {
     data.forEach(item => {
         const row = document.createElement("div");
         row.className = "item-row";
+        row.dataset.id = item.id_utstyr;
+
+        let statusText = "Ledig";
+        let statusClass = "not-selected";
+
+        if (item.loaned) {
+            if (item.loaned_by === user.id) {
+                statusText = "Lånt av deg";
+                statusClass = "selected";
+                row.classList.add("active");
+            } else {
+                statusText = "Utlånt";
+                statusClass = "locked";
+            }
+        }
 
         row.innerHTML = `
-            <div class="cell name">${item.name}</div>
-            <div class="cell number">${item.item_number}</div>
-            <div class="cell status not-selected">Ikke valgt</div>
+            <div class="cell name">${item.tekst}</div>
+            <div class="cell number">${item.utstyr_nummer}</div>
+            <div class="cell status ${statusClass}">${statusText}</div>
         `;
 
-        row.addEventListener("click", () => toggle(row));
+        row.addEventListener("click", () => toggleLoan(item, user));
         grid.appendChild(row);
     });
 }
 
-// ✔️ Valgt / ikke valgt
-function toggle(row) {
-    const status = row.querySelector(".status");
+// 🔄 Lån / lever inn
+async function toggleLoan(item, user) {
 
-    row.classList.toggle("active");
-
-    if (row.classList.contains("active")) {
-        status.textContent = "Valgt";
-        status.classList.remove("not-selected");
-        status.classList.add("selected");
-    } else {
-        status.textContent = "Ikke valgt";
-        status.classList.remove("selected");
-        status.classList.add("not-selected");
+    // ❌ Andre kan ikke levere inn
+    if (item.loaned && item.loaned_by !== user.id) {
+        alert("Dette utstyret er allerede lånt");
+        return;
     }
+
+    // 🔄 Lever inn
+    if (item.loaned && item.loaned_by === user.id) {
+        await supabaseClient
+            .from("equipment")
+            .update({
+                loaned: false,
+                loaned_by: null
+            })
+            .eq("id_utstyr", item.id_utstyr);
+    }
+
+    // ✅ Lån
+    if (!item.loaned) {
+        await supabaseClient
+            .from("equipment")
+            .update({
+                loaned: true,
+                loaned_by: user.id
+            })
+            .eq("id_utstyr", item.id_utstyr);
+    }
+
+    loadEquipment();
 }
 
-// 🚀 Kjør når siden er lastet
+// 🚀 Start
 document.addEventListener("DOMContentLoaded", () => {
     loadEquipment();
 });
+
