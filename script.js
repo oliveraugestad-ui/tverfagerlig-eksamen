@@ -7,16 +7,20 @@ const supabaseClient = supabase.createClient(
     SUPABASE_KEY
 );
 
-// Knapper (sjekk at de finnes på siden før vi legger til event listeners)
+
+/* ======================
+   LOGIN / REGISTER
+====================== */
+
 const loginBtn = document.getElementById("loginBtn");
 const registerBtn = document.getElementById("registerBtn");
+
 if (loginBtn) loginBtn.addEventListener("click", login);
 if (registerBtn) registerBtn.addEventListener("click", register);
 
-// REGISTRER
 async function register() {
-    const email = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
+    const email = document.getElementById("username")?.value;
+    const password = document.getElementById("password")?.value;
 
     const { error } = await supabaseClient.auth.signUp({
         email,
@@ -31,10 +35,9 @@ async function register() {
     window.location.href = "main.html";
 }
 
-// LOGG INN
 async function login() {
-    const email = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
+    const email = document.getElementById("username")?.value;
+    const password = document.getElementById("password")?.value;
 
     const { error } = await supabaseClient.auth.signInWithPassword({
         email,
@@ -49,30 +52,36 @@ async function login() {
     window.location.href = "main.html";
 }
 
-// 🔑 Hent innlogget bruker
+/* ======================
+   UTSTYR
+====================== */
+
+// Hent innlogget bruker
 async function getUser() {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    return user;
+    const { data } = await supabaseClient.auth.getUser();
+    return data.user;
 }
 
-// 🔽 Last utstyr
+// Last utstyr
 async function loadEquipment() {
     const grid = document.getElementById("equipmentGrid");
     if (!grid) return;
 
     const user = await getUser();
+
     if (!user) {
-        alert("Du må være logget inn");
+        grid.innerHTML = "<p>Du må være logget inn</p>";
         return;
     }
 
     const { data, error } = await supabaseClient
         .from("equipment")
-        .select("id_utstyr, tekst, utstyr_nummer, loaned, loaned_by")
+        .select("*")
         .order("utstyr_nummer");
 
     if (error) {
         console.error(error);
+        grid.innerHTML = "<p>Kunne ikke laste utstyr</p>";
         return;
     }
 
@@ -81,7 +90,6 @@ async function loadEquipment() {
     data.forEach(item => {
         const row = document.createElement("div");
         row.className = "item-row";
-        row.dataset.id = item.id_utstyr;
 
         let statusText = "Ledig";
         let statusClass = "not-selected";
@@ -103,47 +111,44 @@ async function loadEquipment() {
             <div class="cell status ${statusClass}">${statusText}</div>
         `;
 
-        row.addEventListener("click", () => toggleLoan(item, user));
+        row.addEventListener("click", () => toggleLoan(item.id_utstyr, user));
         grid.appendChild(row);
     });
 }
 
-// 🔄 Lån / lever inn
-async function toggleLoan(item, user) {
+// Lån / lever inn
+async function toggleLoan(id, user) {
 
-    // ❌ Andre kan ikke levere inn
+    const { data: item } = await supabaseClient
+        .from("equipment")
+        .select("*")
+        .eq("id_utstyr", id)
+        .single();
+
     if (item.loaned && item.loaned_by !== user.id) {
-        alert("Dette utstyret er allerede lånt");
+        alert("Utstyret er allerede lånt");
         return;
     }
 
-    // 🔄 Lever inn
     if (item.loaned && item.loaned_by === user.id) {
         await supabaseClient
             .from("equipment")
-            .update({
-                loaned: false,
-                loaned_by: null
-            })
-            .eq("id_utstyr", item.id_utstyr);
-    }
-
-    // ✅ Lån
-    if (!item.loaned) {
+            .update({ loaned: false, loaned_by: null })
+            .eq("id_utstyr", id);
+    } else {
         await supabaseClient
             .from("equipment")
-            .update({
-                loaned: true,
-                loaned_by: user.id
-            })
-            .eq("id_utstyr", item.id_utstyr);
+            .update({ loaned: true, loaned_by: user.id })
+            .eq("id_utstyr", id);
     }
 
     loadEquipment();
 }
 
-// 🚀 Start
+/* ======================
+   START
+====================== */
+
 document.addEventListener("DOMContentLoaded", () => {
     loadEquipment();
 });
-
