@@ -8,10 +8,9 @@ const supabaseClient = supabase.createClient(
 );
 
 
-/* ======================
-   LOGIN / REGISTER
-====================== */
-
+// ======================
+// LOGIN / REGISTER
+// ======================
 const loginBtn = document.getElementById("loginBtn");
 const registerBtn = document.getElementById("registerBtn");
 
@@ -22,53 +21,40 @@ async function register() {
     const email = document.getElementById("username")?.value;
     const password = document.getElementById("password")?.value;
 
-    const { error } = await supabaseClient.auth.signUp({
-        email,
-        password
-    });
+    if (!email || !password) return alert("Fyll ut alle felt");
 
-    if (error) {
-        alert(error.message);
-        return;
-    }
+    const { data, error } = await supabaseClient.auth.signUp({ email, password });
+    if (error) return alert(error.message);
 
-    window.location.href = "main.html";
+    alert("Registrering vellykket! Logg inn nå.");
 }
 
 async function login() {
     const email = document.getElementById("username")?.value;
     const password = document.getElementById("password")?.value;
 
-    const { error } = await supabaseClient.auth.signInWithPassword({
-        email,
-        password
-    });
+    if (!email || !password) return alert("Fyll ut alle felt");
 
-    if (error) {
-        alert("Feil e-post eller passord");
-        return;
-    }
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) return alert("Feil e-post eller passord");
 
-    window.location.href = "main.html";
+    alert("Login vellykket!");
+    loadEquipment();
 }
 
-/* ======================
-   UTSTYR
-====================== */
-
-// Hent innlogget bruker
+// ======================
+// UTSTYR
+// ======================
 async function getUser() {
     const { data } = await supabaseClient.auth.getUser();
     return data.user;
 }
 
-// Last utstyr
 async function loadEquipment() {
     const grid = document.getElementById("equipmentGrid");
     if (!grid) return;
 
     const user = await getUser();
-
     if (!user) {
         grid.innerHTML = "<p>Du må være logget inn</p>";
         return;
@@ -115,26 +101,18 @@ async function loadEquipment() {
         grid.appendChild(row);
     });
 }
+
 async function addEquipment() {
-    const name = document.getElementById("equipName").value;
-    const number = document.getElementById("equipNumber").value;
+    const name = document.getElementById("equipName")?.value;
+    const number = document.getElementById("equipNumber")?.value;
 
-    if (!name || !number) {
-        alert("Fyll ut alle felt");
-        return;
-    }
+    if (!name || !number) return alert("Fyll ut alle felt");
 
-    const { error } = await supabaseClient
+    const { error } = await supabase
         .from("equipment")
-        .insert({
-            tekst: name,
-            utstyr_nummer: number
-        });
+        .insert({ tekst: name, utstyr_nummer: number });
 
-    if (error) {
-        alert(error.message);
-        return;
-    }
+    if (error) return alert(error.message);
 
     document.getElementById("equipName").value = "";
     document.getElementById("equipNumber").value = "";
@@ -142,27 +120,26 @@ async function addEquipment() {
     loadEquipment();
 }
 
-// Lån / lever inn
 async function toggleLoan(id, user) {
-
-    const { data: item } = await supabaseClient
+    const { data: item, error } = await supabase
         .from("equipment")
         .select("*")
         .eq("id_utstyr", id)
         .single();
 
+    if (error) return console.error(error);
+
     if (item.loaned && item.loaned_by !== user.id) {
-        alert("Utstyret er allerede lånt");
-        return;
+        return alert("Utstyret er allerede lånt");
     }
 
     if (item.loaned && item.loaned_by === user.id) {
-        await supabaseClient
+        await supabase
             .from("equipment")
             .update({ loaned: false, loaned_by: null })
             .eq("id_utstyr", id);
     } else {
-        await supabaseClient
+        await supabase
             .from("equipment")
             .update({ loaned: true, loaned_by: user.id })
             .eq("id_utstyr", id);
@@ -171,10 +148,9 @@ async function toggleLoan(id, user) {
     loadEquipment();
 }
 
-/* ======================
-   START
-====================== */
-
+// ======================
+// START
+// ======================
 document.addEventListener("DOMContentLoaded", () => {
     loadEquipment();
 });
