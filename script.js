@@ -115,6 +115,32 @@ async function loadEquipment() {
         grid.appendChild(row);
     });
 }
+async function addEquipment() {
+    const name = document.getElementById("equipName").value;
+    const number = document.getElementById("equipNumber").value;
+
+    if (!name || !number) {
+        alert("Fyll ut alle felt");
+        return;
+    }
+
+    const { error } = await supabaseClient
+        .from("equipment")
+        .insert({
+            tekst: name,
+            utstyr_nummer: number
+        });
+
+    if (error) {
+        alert(error.message);
+        return;
+    }
+
+    document.getElementById("equipName").value = "";
+    document.getElementById("equipNumber").value = "";
+
+    loadEquipment();
+}
 
 // Lån / lever inn
 async function toggleLoan(id, user) {
