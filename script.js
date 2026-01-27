@@ -7,10 +7,10 @@ const supabaseClient = supabase.createClient(
     SUPABASE_KEY
 );
 
+/* ======================
+   LOGIN / REGISTER
+====================== */
 
-// ======================
-// LOGIN / REGISTER
-// ======================
 const loginBtn = document.getElementById("loginBtn");
 const registerBtn = document.getElementById("registerBtn");
 
@@ -21,35 +21,40 @@ async function register() {
     const email = document.getElementById("username")?.value;
     const password = document.getElementById("password")?.value;
 
-    if (!email || !password) return alert("Fyll ut alle felt");
+    const { error } = await supabaseClient.auth.signUp({ email, password });
 
-    const { data, error } = await supabaseClient.auth.signUp({ email, password });
-    if (error) return alert(error.message);
+    if (error) {
+        alert(error.message);
+        return;
+    }
 
-    alert("Registrering vellykket! Logg inn nå.");
+    window.location.href = "main.html";
 }
 
 async function login() {
     const email = document.getElementById("username")?.value;
     const password = document.getElementById("password")?.value;
 
-    if (!email || !password) return alert("Fyll ut alle felt");
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
-    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (error) return alert("Feil e-post eller passord");
+    if (error) {
+        alert("Feil e-post eller passord");
+        return;
+    }
 
-    alert("Login vellykket!");
-    loadEquipment();
+    window.location.href = "main.html";
 }
 
-// ======================
-// UTSTYR
-// ======================
+/* ======================
+   UTSTYR
+====================== */
+
 async function getUser() {
     const { data } = await supabaseClient.auth.getUser();
     return data.user;
 }
 
+// Last utstyr
 async function loadEquipment() {
     const grid = document.getElementById("equipmentGrid");
     if (!grid) return;
@@ -102,17 +107,27 @@ async function loadEquipment() {
     });
 }
 
+// Legg til nytt utstyr
 async function addEquipment() {
     const name = document.getElementById("equipName")?.value;
     const number = document.getElementById("equipNumber")?.value;
 
-    if (!name || !number) return alert("Fyll ut alle felt");
+    if (!name || !number) {
+        alert("Fyll ut alle felt");
+        return;
+    }
 
-    const { error } = await supabase
+    const { error } = await supabaseClient
         .from("equipment")
-        .insert({ tekst: name, utstyr_nummer: number });
+        .insert({
+            tekst: name,
+            utstyr_nummer: number
+        });
 
-    if (error) return alert(error.message);
+    if (error) {
+        alert(error.message);
+        return;
+    }
 
     document.getElementById("equipName").value = "";
     document.getElementById("equipNumber").value = "";
@@ -120,26 +135,31 @@ async function addEquipment() {
     loadEquipment();
 }
 
+// Lån / lever inn
 async function toggleLoan(id, user) {
-    const { data: item, error } = await supabase
+    const { data: item, error } = await supabaseClient
         .from("equipment")
         .select("*")
         .eq("id_utstyr", id)
         .single();
 
-    if (error) return console.error(error);
-
-    if (item.loaned && item.loaned_by !== user.id) {
-        return alert("Utstyret er allerede lånt");
+    if (error) {
+        alert(error.message);
+        return;
     }
 
-    if (item.loaned && item.loaned_by === user.id) {
-        await supabase
+    if (item.loaned && item.loaned_by !== user.id) {
+        alert("Utstyret er allerede lånt");
+        return;
+    }
+
+    if (item.loaned) {
+        await supabaseClient
             .from("equipment")
             .update({ loaned: false, loaned_by: null })
             .eq("id_utstyr", id);
     } else {
-        await supabase
+        await supabaseClient
             .from("equipment")
             .update({ loaned: true, loaned_by: user.id })
             .eq("id_utstyr", id);
@@ -148,9 +168,10 @@ async function toggleLoan(id, user) {
     loadEquipment();
 }
 
-// ======================
-// START
-// ======================
+/* ======================
+   START
+====================== */
+
 document.addEventListener("DOMContentLoaded", () => {
     loadEquipment();
 });
