@@ -1,105 +1,146 @@
+/* ======================
+   GENERELLE REGLER
+====================== */
+
+/* Sørger for at padding og border ikke ødelegger størrelser */
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
+/* Grunnstil for hele siden */
 body {
-    font-family: "Inter", Arial, sans-serif;
-    background: #f4f6fb;
-    padding: 40px;
-    color: #222;
+    font-family: "Inter", Arial, sans-serif; /* Moderne og lettlest font */
+    background: #f4f6fb;                    /* Lys bakgrunn */
+    padding: 40px;                          /* Luft rundt innholdet */
+    color: #222;                            /* Mørk tekstfarge */
 }
 
-/* Tittel */
+/* ======================
+   OVERSKRIFT
+====================== */
+
+/* Stil på hovedtittel */
 h1 {
-    margin-bottom: 25px;
-    font-size: 32px;
-    font-weight: 600;
+    margin-bottom: 25px; /* Avstand under tittelen */
+    font-size: 32px;     /* Stor tekst */
+    font-weight: 600;    /* Litt tykkere skrift */
 }
 
-/* ====== LEGG TIL UTSTYR ====== */
+/* ======================
+   LEGG TIL UTSTYR-KNAPP
+====================== */
+
+/* Standard stil på knappen */
 #addBtn {
-    background-color: #2563eb; /* rolig blå */
-    color: white;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 8px;
+    background-color: #2563eb; /* Rolig blå farge */
+    color: white;              /* Hvit tekst */
+    border: none;              /* Fjerner standard kant */
+    padding: 10px 18px;        /* Størrelse på knappen */
+    border-radius: 8px;        /* Runde hjørner */
     font-size: 14px;
     font-weight: 500;
-    cursor: pointer;
+    cursor: pointer;           /* Hånd-peker ved hover */
     transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* Når brukeren holder musepekeren over knappen */
 #addBtn:hover {
-    background-color: #1e4ed8;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    background-color: #1e4ed8; /* Litt mørkere blå */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Skygge */
 }
 
+/* Når knappen trykkes ned */
 #addBtn:active {
-    background-color: #1e40af;
+    background-color: #1e40af; /* Enda mørkere blå */
 }
 
-/* ====== UTSTYR LISTE ====== */
+/* ======================
+   UTSTYRSLISTE
+====================== */
+
+/* Container for alle rader */
 .grid {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
+    flex-direction: column; /* Radene ligger under hverandre */
+    gap: 12px;              /* Avstand mellom rader */
 }
 
-/* ÉN RAD */
+/* ======================
+   ÉN RAD MED UTSTYR
+====================== */
+
+/* Hele raden for ett utstyr */
 .item-row {
     display: grid;
-    grid-template-columns: 3fr 2fr 2fr;
-    background: rgb(255, 255, 255);
+    grid-template-columns: 3fr 2fr 2fr; /* Navn, nummer, status */
+    background: white;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.07);
     cursor: pointer;
     transition: transform 0.15s, box-shadow 0.15s;
 }
 
+/* Når musepekeren er over raden */
 .item-row:hover {
-    transform: translateY(-2px);
+    transform: translateY(-2px); /* Løfter raden litt */
     box-shadow: 0 8px 20px rgba(0,0,0,0.12);
 }
 
-/* Celler */
+/* ======================
+   CELLER I RADEN
+====================== */
+
+/* Stil på hver celle i raden */
 .cell {
-    padding: 18px;
+    padding: 18px;             /* Luft inni cellen */
     display: flex;
-    align-items: center;
+    align-items: center;       /* Sentrerer tekst vertikalt */
     font-size: 15px;
 }
 
-/* Status */
+/* ======================
+   STATUSFARGER
+====================== */
+
+/* Når utstyret er ledig */
 .not-selected {
     color: #2c2c2c;
     font-weight: 500;
 }
 
+/* Når utstyret er lånt av brukeren */
 .selected {
-    background: #007bff;
+    background: #007bff;       /* Blå bakgrunn */
     color: white;
-    border-radius: 0 12px 12px 0;
+    border-radius: 0 12px 12px 0; /* Runde hjørner kun på høyre side */
     justify-content: center;
     font-weight: 600;
 }
 
+/* ======================
+   INPUT-FELT
+====================== */
+
+/* Tekstfelter for å legge inn nytt utstyr */
 input {
     width: 220px;
     padding: 10px 12px;
-    border: 1px solid #d1d5db;
+    border: 1px solid #d1d5db; /* Lys grå kant */
     border-radius: 8px;
     font-size: 14px;
-    outline: none;
+    outline: none;             /* Fjerner blå standardkant */
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* Placeholder-tekst i input-felt */
 input::placeholder {
     color: #9ca3af;
 }
 
+/* Når input-feltet er aktivt */
 input:focus {
-    border-color: #2563eb;
+    border-color: #2563eb;     /* Blå kant */
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
