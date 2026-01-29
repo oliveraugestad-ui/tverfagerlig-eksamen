@@ -2,22 +2,24 @@
 <html lang="no">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Utstyr</title>
 
     <link rel="stylesheet" href="style.css">
 
-    <!-- Supabase MÅ lastes før script.js -->
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
 <h1>Utstyr</h1>
-<h2>Legg til nytt utstyr</h2>
 
-<input id="newName" placeholder="Navn på utstyr">
-<input id="newNumber" placeholder="Utstyrnummer (f.eks APL-01)">
+<h2>Legg til nytt utstyr</h2>
+<input id="equipName" placeholder="Navn på utstyr">
+<input id="equipNumber" placeholder="Utstyrsnummer (f.eks APL-001)">
 <button id="addBtn">Legg til</button>
+
+<hr>
+
 <div class="grid" id="equipmentGrid"></div>
 
 <script src="script.js"></script>

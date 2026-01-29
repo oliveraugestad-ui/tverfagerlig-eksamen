@@ -1,7 +1,6 @@
 const SUPABASE_URL = "https://bhpbssjrnpavisxhfiez.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJocGJzc2pybnBhdmlzeGhmaWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNjM2NzMsImV4cCI6MjA4MzkzOTY3M30.H49jZC_LHsL2ouMcTRW71cJAvjYYlRNBnG9omdkG0zA";
 
-// Lag Supabase-klient
 const supabaseClient = supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY
@@ -22,11 +21,7 @@ async function register() {
     const password = document.getElementById("password")?.value;
 
     const { error } = await supabaseClient.auth.signUp({ email, password });
-
-    if (error) {
-        alert(error.message);
-        return;
-    }
+    if (error) return alert(error.message);
 
     window.location.href = "main.html";
 }
@@ -36,25 +31,22 @@ async function login() {
     const password = document.getElementById("password")?.value;
 
     const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-
-    if (error) {
-        alert("Feil e-post eller passord");
-        return;
-    }
+    if (error) return alert("Feil e-post eller passord");
 
     window.location.href = "main.html";
 }
 
 /* ======================
-   UTSTYR
+   HENT BRUKER
 ====================== */
-
 async function getUser() {
     const { data } = await supabaseClient.auth.getUser();
     return data.user;
 }
 
-// Last utstyr
+/* ======================
+   LAST UTSTYR
+====================== */
 async function loadEquipment() {
     const grid = document.getElementById("equipmentGrid");
     if (!grid) return;
@@ -72,7 +64,7 @@ async function loadEquipment() {
 
     if (error) {
         console.error(error);
-        grid.innerHTML = "<p>Kunne ikke laste utstyr</p>";
+        grid.innerHTML = "<p>Feil ved lasting</p>";
         return;
     }
 
@@ -89,7 +81,6 @@ async function loadEquipment() {
             if (item.loaned_by === user.id) {
                 statusText = "Lånt av deg";
                 statusClass = "selected";
-                row.classList.add("active");
             } else {
                 statusText = "Utlånt";
                 statusClass = "locked";
@@ -97,23 +88,60 @@ async function loadEquipment() {
         }
 
         row.innerHTML = `
-            <div class="cell name">${item.tekst}</div>
-            <div class="cell number">${item.utstyr_nummer}</div>
-            <div class="cell status ${statusClass}">${statusText}</div>
+            <div class="cell">${item.tekst}</div>
+            <div class="cell">${item.utstyr_nummer}</div>
+            <div class="cell ${statusClass}">${statusText}</div>
         `;
 
-        row.addEventListener("click", () => toggleLoan(item.id_utstyr, user));
+        row.addEventListener("click", () => toggleLoan(item, user));
         grid.appendChild(row);
     });
 }
 
-// Legg til nytt utstyr
+/* ======================
+   LÅN / LEVER INN
+====================== */
+async function toggleLoan(item, user) {
+
+    // 🚫 Lånt av andre
+    if (item.loaned && item.loaned_by !== user.id) {
+        alert("Utstyret er allerede lånt av en annen");
+        return;
+    }
+
+    // 🔄 Lever inn
+    if (item.loaned && item.loaned_by === user.id) {
+        await supabaseClient
+            .from("equipment")
+            .update({
+                loaned: false,
+                loaned_by: null
+            })
+            .eq("id_utstyr", item.id_utstyr);
+    }
+    // ✅ Lån
+    else {
+        await supabaseClient
+            .from("equipment")
+            .update({
+                loaned: true,
+                loaned_by: user.id
+            })
+            .eq("id_utstyr", item.id_utstyr);
+    }
+
+    loadEquipment();
+}
+
+/* ======================
+   LEGG TIL UTSTYR
+====================== */
 async function addEquipment() {
-    const name = document.getElementById("equipName")?.value;
-    const number = document.getElementById("equipNumber")?.value;
+    const name = document.getElementById("equipName").value.trim();
+    const number = document.getElementById("equipNumber").value.trim();
 
     if (!name || !number) {
-        alert("Fyll ut alle felt");
+        alert("Fyll ut begge feltene");
         return;
     }
 
@@ -135,43 +163,12 @@ async function addEquipment() {
     loadEquipment();
 }
 
-// Lån / lever inn
-async function toggleLoan(id, user) {
-    const { data: item, error } = await supabaseClient
-        .from("equipment")
-        .select("*")
-        .eq("id_utstyr", id)
-        .single();
-
-    if (error) {
-        alert(error.message);
-        return;
-    }
-
-    if (item.loaned && item.loaned_by !== user.id) {
-        alert("Utstyret er allerede lånt");
-        return;
-    }
-
-    if (item.loaned) {
-        await supabaseClient
-            .from("equipment")
-            .update({ loaned: false, loaned_by: null })
-            .eq("id_utstyr", id);
-    } else {
-        await supabaseClient
-            .from("equipment")
-            .update({ loaned: true, loaned_by: user.id })
-            .eq("id_utstyr", id);
-    }
-
-    loadEquipment();
-}
-
 /* ======================
    START
 ====================== */
-
 document.addEventListener("DOMContentLoaded", () => {
     loadEquipment();
+
+    const btn = document.getElementById("addBtn");
+    if (btn) btn.addEventListener("click", addEquipment);
 });
