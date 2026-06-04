@@ -186,61 +186,44 @@ async function toggleLoan(item, user) {
         return;
     }
 
-    // Hvis brukeren leverer inn sitt eget utstyr
-    if (item.loaned && item.loaned_by === user.id) {
-        let update = await supabaseClient
-            .from("equipment")
-            .update({
-                loaned: false,
-                loaned_by: null,
-                loaned_at: null
-            })
-            .eq("id_utstyr", item.id_utstyr);
+    const isReturning = item.loaned && item.loaned_by === user.id;
+    const payload = isReturning
+        ? { loaned: false, loaned_by: null, loaned_at: null }
+        : { loaned: true, loaned_by: user.id, loaned_at: new Date().toISOString() };
 
-        if (update.error && update.error.code === "42703") {
-            update = await supabaseClient
-                .from("equipment")
-                .update({
-                    loaned: false,
-                    loaned_by: null
-                })
-                .eq("id_utstyr", item.id_utstyr);
-        }
-
-        if (update.error) {
-            alert("Feil ved innlevering: " + update.error.message);
-            return;
-        }
-    }
-    // Hvis brukeren låner utstyret
-    else {
-        let update = await supabaseClient
-            .from("equipment")
-            .update({
-                loaned: true,
-                loaned_by: user.id,
-                loaned_at: new Date().toISOString()
-            })
-            .eq("id_utstyr", item.id_utstyr);
-
-        if (update.error && update.error.code === "42703") {
-            update = await supabaseClient
-                .from("equipment")
-                .update({
-                    loaned: true,
-                    loaned_by: user.id
-                })
-                .eq("id_utstyr", item.id_utstyr);
-        }
-
-        if (update.error) {
-            alert("Feil ved utlån: " + update.error.message);
-            return;
-        }
+    const result = await updateEquipment(item.id_utstyr, payload);
+    if (result.error) {
+        const actionText = isReturning ? "innlevering" : "utlån";
+        alert(`Feil ved ${actionText}: ${result.error.message}`);
+        return;
     }
 
     // Laster utstyret på nytt
     loadEquipment();
+}
+
+async function updateEquipment(id, payload) {
+    let result = await supabaseClient
+        .from("equipment")
+        .update(payload)
+        .eq("id_utstyr", id);
+
+    if (result.error && isColumnNotFoundError(result.error, "loaned_at")) {
+        const fallbackPayload = { ...payload };
+        delete fallbackPayload.loaned_at;
+
+        result = await supabaseClient
+            .from("equipment")
+            .update(fallbackPayload)
+            .eq("id_utstyr", id);
+    }
+
+    return result;
+}
+
+function isColumnNotFoundError(error, columnName) {
+    const message = `${error.message || ""} ${error.details || ""}`;
+    return error.code === "42703" || message.toLowerCase().includes(columnName);
 }
 
 /* ======================
