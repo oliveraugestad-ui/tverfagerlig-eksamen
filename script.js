@@ -19,7 +19,14 @@ const registerBtn = document.getElementById("registerBtn");
 if (loginBtn) loginBtn.addEventListener("click", login);
 if (registerBtn) registerBtn.addEventListener("click", register);
 
-// 🔐 Registrer ny bruker
+document.addEventListener("DOMContentLoaded", async () => {
+    if (document.getElementById("equipmentGrid")) {
+        document.getElementById("addBtn")?.addEventListener("click", addEquipment);
+        await loadEquipment();
+    }
+});
+
+// 🔐 Registrer ny bruker 
 async function register() {
     // Henter e-post og passord fra input-feltene
     const email = document.getElementById("username")?.value;
@@ -114,10 +121,13 @@ async function loadEquipment() {
             }
         }
 
+        const borrowerInfo = getBorrowerInfo(item, user);
+
         // Setter inn HTML for én rad med utstyr
         row.innerHTML = `
             <div class="cell">${item.tekst}</div>
             <div class="cell">${item.utstyr_nummer}</div>
+            <div class="cell">${borrowerInfo}</div>
             <div class="cell ${statusClass}">${statusText}</div>
         `;
 
@@ -126,6 +136,41 @@ async function loadEquipment() {
 
         grid.appendChild(row);
     });
+}
+
+function getBorrowerInfo(item, user) {
+    if (!item.loaned) return "Ledig";
+
+    const when = item.loaned_at ? formatDate(item.loaned_at) : "Nylig lånt";
+    if (item.loaned_by === user.id) {
+        return `Lånt av deg • ${when}`;
+    }
+
+    const borrower = item.loaned_by_email
+        ? item.loaned_by_email
+        : item.loaned_by
+            ? `bruker ${shortId(item.loaned_by)}`
+            : "ukjent bruker";
+    return `${borrower} • ${when}`;
+}
+
+function formatDate(timestamp) {
+    try {
+        const date = new Date(timestamp);
+        return date.toLocaleDateString("nb-NO", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    } catch {
+        return "Ukjent tidspunkt";
+    }
+}
+
+function shortId(id) {
+    return typeof id === "string" ? id.slice(0, 8) : String(id);
 }
 
 /* ======================
@@ -143,23 +188,55 @@ async function toggleLoan(item, user) {
 
     // Hvis brukeren leverer inn sitt eget utstyr
     if (item.loaned && item.loaned_by === user.id) {
-        await supabaseClient
+        let update = await supabaseClient
             .from("equipment")
             .update({
                 loaned: false,
-                loaned_by: null
+                loaned_by: null,
+                loaned_at: null
             })
             .eq("id_utstyr", item.id_utstyr);
+
+        if (update.error && update.error.code === "42703") {
+            update = await supabaseClient
+                .from("equipment")
+                .update({
+                    loaned: false,
+                    loaned_by: null
+                })
+                .eq("id_utstyr", item.id_utstyr);
+        }
+
+        if (update.error) {
+            alert("Feil ved innlevering: " + update.error.message);
+            return;
+        }
     }
     // Hvis brukeren låner utstyret
     else {
-        await supabaseClient
+        let update = await supabaseClient
             .from("equipment")
             .update({
                 loaned: true,
-                loaned_by: user.id
+                loaned_by: user.id,
+                loaned_at: new Date().toISOString()
             })
             .eq("id_utstyr", item.id_utstyr);
+
+        if (update.error && update.error.code === "42703") {
+            update = await supabaseClient
+                .from("equipment")
+                .update({
+                    loaned: true,
+                    loaned_by: user.id
+                })
+                .eq("id_utstyr", item.id_utstyr);
+        }
+
+        if (update.error) {
+            alert("Feil ved utlån: " + update.error.message);
+            return;
+        }
     }
 
     // Laster utstyret på nytt

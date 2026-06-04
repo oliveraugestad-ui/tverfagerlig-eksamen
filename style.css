@@ -74,7 +74,7 @@ h1 {
 /* Hele raden for ett utstyr */
 .item-row {
     display: grid;
-    grid-template-columns: 3fr 2fr 2fr; /* Navn, nummer, status */
+    grid-template-columns: 3fr 2fr 2.5fr 2fr; /* Navn, nummer, lånt av/når, status */
     background: white;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.07);
@@ -86,6 +86,17 @@ h1 {
 .item-row:hover {
     transform: translateY(-2px); /* Løfter raden litt */
     box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.header-row {
+    background: #eef2ff;
+    font-weight: 700;
+    cursor: default;
+}
+
+.header-row:hover {
+    transform: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.07);
 }
 
 /* ======================
