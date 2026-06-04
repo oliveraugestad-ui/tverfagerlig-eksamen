@@ -20,11 +20,38 @@ if (loginBtn) loginBtn.addEventListener("click", login);
 if (registerBtn) registerBtn.addEventListener("click", register);
 
 document.addEventListener("DOMContentLoaded", async () => {
+    initTheme();
+
+    document.getElementById("themeToggleBtn")?.addEventListener("click", toggleTheme);
+
     if (document.getElementById("equipmentGrid")) {
         document.getElementById("addBtn")?.addEventListener("click", addEquipment);
         await loadEquipment();
     }
 });
+
+function initTheme() {
+    const savedTheme = localStorage.getItem("theme") || "light";
+    applyTheme(savedTheme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.body.classList.contains("dark-theme") ? "dark" : "light";
+    const nextTheme = currentTheme === "dark" ? "light" : "dark";
+    applyTheme(nextTheme);
+}
+
+function applyTheme(theme) {
+    const button = document.getElementById("themeToggleBtn");
+    if (theme === "dark") {
+        document.body.classList.add("dark-theme");
+        button && (button.textContent = "Lys modus");
+    } else {
+        document.body.classList.remove("dark-theme");
+        button && (button.textContent = "Mørk modus");
+    }
+    localStorage.setItem("theme", theme);
+}
 
 // 🔐 Registrer ny bruker 
 async function register() {

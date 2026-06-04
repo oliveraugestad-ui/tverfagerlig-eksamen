@@ -9,12 +9,25 @@
     padding: 0;
 }
 
-/* Grunnstil for hele siden */
+/* Fargevariabler for tema */
+:root {
+    --bg: #f4f6fb;
+    --surface: #ffffff;
+    --surface-strong: #eef2ff;
+    --text: #111827;
+    --text-muted: #4b5563;
+    --button: #2563eb;
+    --button-hover: #1e4ed8;
+    --button-active: #1e40af;
+    --shadow: rgba(0,0,0,0.07);
+}
+
 body {
     font-family: "Inter", Arial, sans-serif; /* Moderne og lettlest font */
-    background: #f4f6fb;                    /* Lys bakgrunn */
-    padding: 40px;                          /* Luft rundt innholdet */
-    color: #222;                            /* Mørk tekstfarge */
+    background: var(--bg);                    /* Lys bakgrunn */
+    padding: 40px;                            /* Luft rundt innholdet */
+    color: var(--text);                       /* Mørk tekstfarge */
+    transition: background 0.25s ease, color 0.25s ease;
 }
 
 /* ======================
@@ -75,11 +88,11 @@ h1 {
 .item-row {
     display: grid;
     grid-template-columns: 3fr 2fr 2.5fr 2fr; /* Navn, nummer, lånt av/når, status */
-    background: white;
+    background: var(--surface);
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+    box-shadow: 0 4px 12px var(--shadow);
     cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s;
+    transition: transform 0.15s, box-shadow 0.15s, background 0.25s ease;
 }
 
 /* Når musepekeren er over raden */
@@ -89,9 +102,50 @@ h1 {
 }
 
 .header-row {
-    background: #eef2ff;
+    background: var(--surface-strong);
     font-weight: 700;
     cursor: default;
+}
+
+.theme-btn {
+    border: none;
+    background: transparent;
+    color: var(--button);
+    font-size: 14px;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.theme-btn:hover {
+    background: rgba(37, 99, 235, 0.1);
+}
+
+body.dark-theme {
+    --bg: #0f172a;
+    --surface: #111827;
+    --surface-strong: #1f2937;
+    --text: #f8fafc;
+    --text-muted: #cbd5e1;
+    --button: #93c5fd;
+    --button-hover: #60a5fa;
+    --button-active: #3b82f6;
+    --shadow: rgba(15, 23, 42, 0.6);
+}
+
+body.dark-theme .item-row {
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.4);
+}
+
+body.dark-theme input {
+    background: #1f2937;
+    color: var(--text);
+    border-color: #334155;
+}
+
+body.dark-theme hr {
+    border-color: #334155;
 }
 
 .header-row:hover {
@@ -117,8 +171,12 @@ h1 {
 
 /* Når utstyret er ledig */
 .not-selected {
-    color: #2c2c2c;
-    font-weight: 500;
+    color: var(--text);
+    background: transparent;
+    font-weight: 600;
+    border-radius: 0 12px 12px 0; /* Runde hjørner kun på høyre side */
+    justify-content: center;
+    padding: 0 12px;
 }
 
 /* Når utstyret er lånt av brukeren */
@@ -142,7 +200,7 @@ input {
     border-radius: 8px;
     font-size: 14px;
     outline: none;             /* Fjerner blå standardkant */
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.25s ease, color 0.25s ease;
 }
 
 /* Placeholder-tekst i input-felt */
