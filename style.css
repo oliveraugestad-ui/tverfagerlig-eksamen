@@ -41,10 +41,11 @@ h1 {
 }
 
 /* ======================
-   LEGG TIL UTSTYR-KNAPP
+   PRIMÆR KNAPP
 ====================== */
 
-/* Standard stil på knappen */
+/* Standard stil på primærknapp */
+.primary-btn,
 #addBtn {
     background-color: #2563eb; /* Rolig blå farge */
     color: white;              /* Hvit tekst */
@@ -54,16 +55,22 @@ h1 {
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;           /* Hånd-peker ved hover */
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 /* Når brukeren holder musepekeren over knappen */
+.primary-btn:hover,
 #addBtn:hover {
     background-color: #1e4ed8; /* Litt mørkere blå */
     box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Skygge */
 }
 
 /* Når knappen trykkes ned */
+.primary-btn:active,
 #addBtn:active {
     background-color: #1e40af; /* Enda mørkere blå */
 }
