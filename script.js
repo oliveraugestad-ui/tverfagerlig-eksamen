@@ -14,6 +14,11 @@ const supabaseClient = supabase.createClient(
 );
 // `supabaseClient` brukes gjennom hele filen for å snakke med Supabase API.
 
+// Definer hvilke e-poster som regnes som admin-brukere.
+const ADMIN_EMAILS = [
+    "admin@example.com"
+];
+
 /* ======================
    LOGIN / REGISTER
 ====================== */
@@ -185,6 +190,31 @@ async function getUser() {
     return data.user;
 }
 
+function isAdmin(user) {
+    if (!user || !user.email) return false;
+    return ADMIN_EMAILS.includes(user.email.toLowerCase());
+}
+
+function updateAddEquipmentUi(user) {
+    const allowed = isAdmin(user);
+    const inputs = [
+        document.getElementById("equipName"),
+        document.getElementById("equipNumber"),
+        document.getElementById("addBtn")
+    ];
+
+    inputs.forEach(element => {
+        if (element) element.disabled = !allowed;
+    });
+
+    const adminMessage = document.getElementById("adminMessage");
+    if (adminMessage) {
+        adminMessage.textContent = allowed
+            ? ""
+            : "Kun admin kan legge til nytt utstyr.";
+    }
+}
+
 /* ======================
    LAST UTSTYR
 ====================== */
@@ -200,6 +230,8 @@ async function loadEquipment() {
 
     // Henter innlogget bruker.
     const user = await getUser();
+
+    updateAddEquipmentUi(user);
 
     // Hvis ingen bruker er logget inn.
     if (!user) {
@@ -481,6 +513,12 @@ function isColumnNotFoundError(
 
 // Legger nytt utstyr inn i databasen.
 async function addEquipment() {
+
+    const user = await getUser();
+    if (!isAdmin(user)) {
+        alert("Kun admin kan legge til nytt utstyr.");
+        return;
+    }
 
     // Leser verdiene fra skjemaet.
     const name =
