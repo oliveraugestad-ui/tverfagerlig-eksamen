@@ -12,6 +12,7 @@ const supabaseClient = supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY
 );
+// `supabaseClient` brukes gjennom hele filen for å snakke med Supabase API.
 
 /* ======================
    LOGIN / REGISTER
@@ -46,8 +47,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById("addBtn")
             ?.addEventListener("click", addEquipment);
 
+        // Last og vis utstyr, og oppdater utlånstidene jevnlig.
         await loadEquipment();
         refreshLoanDurations();
+        // Oppdater hver 30 sekund for å holde tidene korrekte.
         setInterval(refreshLoanDurations, 30000);
     }
 });
@@ -220,7 +223,7 @@ async function loadEquipment() {
         return;
     }
 
-    // Tømmer eksisterende innhold.
+    // Tømmer eksisterende innhold før vi bygger DOM på nytt.
     grid.innerHTML = "";
 
     // Går gjennom hvert utstyr i databasen.
@@ -235,10 +238,16 @@ async function loadEquipment() {
         let statusText = "Ledig";
         let statusClass = "not-selected";
 
-        // Bruker bare faktiske utlånsfelt som indikator.
+        // Bestemmer utlånsstart og om varen er utlånt.
+        // `loanedAt` hentes fra mulige tidsstempel-felt.
         const loanedAt = getLoanStartedAt(item);
         const isLoaned = Boolean(item.loaned || loanedAt);
 
+        // Bestem visningsstatus basert på hvem som har lånt det.
+        // Hvis innlogget bruker har lånt det viser vi "Lånt av deg".
+        // Ellers vises "Utlånt" og raden låses visuelt.
+        // Hvis ikke utlånt forblir det "Ledig".
+        // Hvis `isLoaned` er true går vi inn i denne blokken.
         // Hvis utstyret er lånt ut.
         if (isLoaned) {
 
@@ -254,6 +263,7 @@ async function loadEquipment() {
         }
 
         // Lager tekst som viser hvor lenge utstyret har vært utlånt.
+        // `getLoanDurationHtml` returnerer en menneskelig lesbar streng.
         const loanDurationHtml = getLoanDurationHtml(item, loanedAt);
 
         // Setter inn innholdet i raden.
@@ -266,7 +276,8 @@ async function loadEquipment() {
             </div>
         `;
 
-        // Ved klikk forsøker vi å låne eller levere inn.
+        // Ved klikk forsøker vi å låne eller levere inn; `toggleLoan` håndterer
+        // både utlån og innlevering basert på nåværende tilstand.
         row.addEventListener("click", () =>
             toggleLoan(item, user)
         );
@@ -284,21 +295,28 @@ function getLoanStartedAt(item) {
 
 // Lager tekst som viser hvor lenge utstyret har vært utlånt.
 function getLoanDurationHtml(item, loanedAt) {
+    // Returnerer "Ledig" hvis ikke utlånt, ellers en formatert tid.
     const hasLoan = Boolean(item.loaned || loanedAt);
     if (!hasLoan) return "Ledig";
-    if (!loanedAt) return "Lånt i mindre enn 1 minutt";
+    // Dersom vi ikke har et tidspunkt viser vi en kort tekst.
+    if (!loanedAt) return formatLoanDurationText(null);
     return formatLoanDurationText(loanedAt);
 }
 
 // Lager tekst som viser hvor lenge det er siden utlån.
 function formatLoanDurationText(timestamp) {
+    // Konverterer et tidsstempel til en kort, norsk tekst:
+    // - mindre enn 1 minutt
+    // - X minutter
+    // - X timer Y minutter
+    // - X dager Y timer
     try {
-        const loanedAt = new Date(timestamp);
+        const loanedAt = timestamp ? new Date(timestamp) : null;
         const now = new Date();
-        const diffMs = Math.max(0, now - loanedAt);
+        const diffMs = loanedAt ? Math.max(0, now - loanedAt) : 0;
 
         const minutes = Math.floor(diffMs / 60000);
-        if (minutes < 1) return "Lånt i mindre enn 1 minutt";
+        if (!loanedAt || minutes < 1) return "Lånt i mindre enn 1 minutt";
         if (minutes < 60) return `Lånt i ${minutes} minutter`;
 
         const hours = Math.floor(minutes / 60);
@@ -330,10 +348,14 @@ function refreshLoanDurations() {
         const loanedAt = cell.dataset.loanedAt;
         const isLoaned = cell.dataset.loaned === "true";
 
+        // Oppdater tekst i cellen basert på timestamp.
         if (!loanedAt) {
-            cell.textContent = isLoaned ? "Utlånt" : "Ledig";
+            // Hvis vi vet at varen er lånt men mangler timestamp,
+            // viser vi en kort fallback-melding.
+            cell.textContent = isLoaned ? "Lånt i mindre enn 1 minutt" : "Ledig";
             return;
         }
+        // Bruk formatfunksjonen for å vise hvor lenge den er lånt.
         cell.textContent = formatLoanDurationText(loanedAt);
     });
 }
@@ -366,11 +388,13 @@ async function toggleLoan(item, user) {
         ? {
             loaned: false,
             loaned_by: null,
+            loaned_by_email: null,
             loaned_at: null
         }
         : {
             loaned: true,
             loaned_by: user.id,
+            loaned_by_email: user.email || null,
             loaned_at: new Date().toISOString()
         };
 
@@ -409,27 +433,28 @@ async function updateEquipment(id, payload) {
             .update(payload)
             .eq("id_utstyr", id);
 
-    // Hvis loaned_at-kolonnen mangler,
-    // prøver vi på nytt uten den.
-    if (
-        result.error &&
-        isColumnNotFoundError(
-            result.error,
-            "loaned_at"
-        )
-    ) {
+    // Hvis noen kolonner mangler i databasen (f.eks. eldre skjema),
+    // prøver vi å oppdatere uten de feltene for å unngå feil.
+    if (result.error) {
+        const fallbackPayload = { ...payload };
+        let retry = false;
 
-        const fallbackPayload = {
-            ...payload
-        };
+        if (isColumnNotFoundError(result.error, "loaned_at")) {
+            delete fallbackPayload.loaned_at;
+            retry = true;
+        }
+        if (isColumnNotFoundError(result.error, "loaned_by_email")) {
+            delete fallbackPayload.loaned_by_email;
+            retry = true;
+        }
 
-        delete fallbackPayload.loaned_at;
-
-        result =
-            await supabaseClient
-                .from("equipment")
-                .update(fallbackPayload)
-                .eq("id_utstyr", id);
+        if (retry) {
+            result =
+                await supabaseClient
+                    .from("equipment")
+                    .update(fallbackPayload)
+                    .eq("id_utstyr", id);
+        }
     }
 
     return result;
