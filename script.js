@@ -14,9 +14,8 @@ const supabaseClient = supabase.createClient(
 );
 // `supabaseClient` brukes gjennom hele filen for å snakke med Supabase API.
 
-// Definer hvilke e-poster som regnes som admin-brukere.
-const ADMIN_EMAILS = [
-    "admin@example.com"
+const AUTHORIZED_ADMIN_EMAILS = [
+    "oliver@augestad.me"
 ];
 
 /* ======================
@@ -45,18 +44,26 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("themeToggleBtn")
         ?.addEventListener("click", toggleTheme);
 
-    // Hvis vi er på siden som viser utstyr,
-    // kobler vi til "legg til"-knappen og laster inn utstyret.
+    // Knytter knappen for å legge til utstyr hvis den finnes.
+    document.getElementById("addBtn")
+        ?.addEventListener("click", addEquipment);
+
+    // Hvis vi er på siden som viser utstyr, last og vis utstyret.
     if (document.getElementById("equipmentGrid")) {
-
-        document.getElementById("addBtn")
-            ?.addEventListener("click", addEquipment);
-
-        // Last og vis utstyr, og oppdater utlånstidene jevnlig.
         await loadEquipment();
         refreshLoanDurations();
         // Oppdater hver 30 sekund for å holde tidene korrekte.
         setInterval(refreshLoanDurations, 30000);
+    }
+
+    // Hvis vi er på admin-siden, forsikrer vi oss om at brukeren er autorisert.
+    if (document.getElementById("adminPage")) {
+        await authorizeAdminPage();
+    }
+
+    // Oppdater admin-lenken hvis den finnes.
+    if (document.getElementById("adminLink")) {
+        await renderAdminLink();
     }
 });
 
@@ -187,33 +194,58 @@ async function getUser() {
     const { data } =
         await supabaseClient.auth.getUser();
 
-    return data.user;
+    if (data.user) {
+        return data.user;
+    }
+
+    const sessionResult =
+        await supabaseClient.auth.getSession();
+
+    return sessionResult.data?.session?.user || null;
 }
 
-function isAdmin(user) {
-    if (!user || !user.email) return false;
-    return ADMIN_EMAILS.includes(user.email.toLowerCase());
+function isAuthorizedAdmin(user) {
+    if (!user) return false;
+
+    const email = user.email?.toLowerCase();
+    if (AUTHORIZED_ADMIN_EMAILS.includes(email)) {
+        return true;
+    }
+
+    const role =
+        user.app_metadata?.role ||
+        user.user_metadata?.role;
+
+    return role === "admin";
 }
 
-function updateAddEquipmentUi(user) {
-    const allowed = isAdmin(user);
-    const inputs = [
-        document.getElementById("equipName"),
-        document.getElementById("equipNumber"),
-        document.getElementById("addBtn")
-    ];
+async function renderAdminLink() {
+    const adminLink = document.getElementById("adminLink");
+    if (!adminLink) return;
 
-    inputs.forEach(element => {
-        if (element) element.disabled = !allowed;
-    });
-
-    const adminMessage = document.getElementById("adminMessage");
-    if (adminMessage) {
-        adminMessage.textContent = allowed
-            ? ""
-            : "Kun admin kan legge til nytt utstyr.";
+    const user = await getUser();
+    if (isAuthorizedAdmin(user)) {
+        adminLink.style.display = "inline-block";
+    } else {
+        adminLink.style.display = "none";
     }
 }
+
+async function authorizeAdminPage() {
+    const user = await getUser();
+    const adminPage = document.getElementById("adminPage");
+
+    if (!adminPage || isAuthorizedAdmin(user)) {
+        return;
+    }
+
+    adminPage.innerHTML = `
+        <h1>Ingen tilgang</h1>
+        <p>Du har ikke tilgang til denne siden.</p>
+        <p>Logg inn som admin eller oliver@augestad.me for å få tilgang.</p>
+    `;
+}
+
 
 /* ======================
    LAST UTSTYR
@@ -230,8 +262,6 @@ async function loadEquipment() {
 
     // Henter innlogget bruker.
     const user = await getUser();
-
-    updateAddEquipmentUi(user);
 
     // Hvis ingen bruker er logget inn.
     if (!user) {
@@ -513,12 +543,6 @@ function isColumnNotFoundError(
 
 // Legger nytt utstyr inn i databasen.
 async function addEquipment() {
-
-    const user = await getUser();
-    if (!isAdmin(user)) {
-        alert("Kun admin kan legge til nytt utstyr.");
-        return;
-    }
 
     // Leser verdiene fra skjemaet.
     const name =

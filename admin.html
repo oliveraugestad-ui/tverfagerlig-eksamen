@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="top-row">
+    <h1>Admin-side</h1>
+    <a href="main.html" class="back-link">Tilbake til lånesiden</a>
+    <button id="themeToggleBtn" class="theme-btn">Mørk modus</button>
+</div>
+
+<div id="adminPage">
+    <p>Denne siden er kun tilgjengelig for admin og oliver@augestad.me.</p>
+    <p>Her kan du legge inn administrative håndteringer og data.</p>
+    <div id="addEquipmentSection">
+        <h2>Legg til nytt utstyr</h2>
+        <input id="equipName" placeholder="Navn på utstyr">
+        <input id="equipNumber" placeholder="Utstyrsnummer (f.eks APL-001)">
+        <button id="addBtn">Legg til</button>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
