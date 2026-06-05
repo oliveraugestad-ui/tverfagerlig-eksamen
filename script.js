@@ -44,12 +44,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("themeToggleBtn")
         ?.addEventListener("click", toggleTheme);
 
-    // Knytter knappen for å legge til utstyr hvis den finnes.
-    document.getElementById("addBtn")
-        ?.addEventListener("click", addEquipment);
-
-    // Hvis vi er på siden som viser utstyr, last og vis utstyret.
+    // Hvis vi er på siden som viser utstyr,
+    // kobler vi til "legg til"-knappen og laster inn utstyret.
     if (document.getElementById("equipmentGrid")) {
+
+        document.getElementById("addBtn")
+            ?.addEventListener("click", addEquipment);
+
+        // Last og vis utstyr, og oppdater utlånstidene jevnlig.
         await loadEquipment();
         refreshLoanDurations();
         // Oppdater hver 30 sekund for å holde tidene korrekte.
