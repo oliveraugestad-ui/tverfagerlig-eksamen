@@ -8,14 +8,25 @@
 </head>
 <body>
 
+<!-- Admin-side
+     - Innholdet her er kun ment for autoriserte brukere.
+     - `script.js` kontrollerer tilgang og vil vise en "ingen tilgang"-melding
+       dersom brukeren ikke er autorisert.
+-->
+
 <div class="top-row">
     <h1>Admin-side</h1>
+    <!-- Tilbakeknapp får samme utseende som primærknapper -->
     <a href="main.html" class="primary-btn back-link">Tilbake til lånesiden</a>
+    <!-- Tema-knapp (gjenbrukt fra øvrige sider) -->
     <button id="themeToggleBtn" class="theme-btn">Mørk modus</button>
 </div>
 
+<!-- Hovedinnhold for admin. Dersom brukeren ikke er autorisert, erstatter
+     `script.js` innholdet i denne containeren med en tilgangsfeilmelding. -->
 <div id="adminPage">
     <p>Her kan du legge inn administrative håndteringer og data.</p>
+    <!-- Legg-til-utstyr skjema (vises kun for autoriserte brukere) -->
     <div id="addEquipmentSection">
         <h2>Legg til nytt utstyr</h2>
         <input id="equipName" placeholder="Navn på utstyr">

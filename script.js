@@ -14,8 +14,16 @@ const supabaseClient = supabase.createClient(
 );
 // `supabaseClient` brukes gjennom hele filen for å snakke med Supabase API.
 
+/*
+    Hovedskript for applikasjonen
+    - Håndterer autentisering, lasting av utstyr, utlån/innlevering og admin-funksjoner.
+    - Admin-tilgang kontrolleres via `AUTHORIZED_ADMIN_EMAILS` eller brukermetadata
+        (`role: admin`) fra Supabase.
+    - Denne filen brukes av `main.html` og `admin.html`.
+*/
+
 const AUTHORIZED_ADMIN_EMAILS = [
-    "oliver@augestad.me"
+        "oliver@augestad.me"
 ];
 
 /* ======================
@@ -188,9 +196,9 @@ async function login() {
 
 /* ======================
    HENT BRUKER
-====================== */
-
-// Henter informasjon om innlogget bruker.
+   - `getUser()` returnerer informasjon om den innloggede brukeren.
+   - Forsøker først `auth.getUser()`, og fallback til `auth.getSession()`.
+*/
 async function getUser() {
 
     const { data } =
@@ -206,6 +214,8 @@ async function getUser() {
     return sessionResult.data?.session?.user || null;
 }
 
+// Sjekker om en bruker er autorisert som admin.
+// Godkjenner enten e-post i `AUTHORIZED_ADMIN_EMAILS` eller brukerrolle `admin`.
 function isAuthorizedAdmin(user) {
     if (!user) return false;
 
@@ -221,6 +231,7 @@ function isAuthorizedAdmin(user) {
     return role === "admin";
 }
 
+// Viser eller skjuler lenken til admin-siden basert på brukerens rettigheter.
 async function renderAdminLink() {
     const adminLink = document.getElementById("adminLink");
     if (!adminLink) return;
@@ -233,6 +244,7 @@ async function renderAdminLink() {
     }
 }
 
+// Autoriserer admin-siden: erstatter innholdet med en feilmelding ved manglende tilgang.
 async function authorizeAdminPage() {
     const user = await getUser();
     const adminPage = document.getElementById("adminPage");
@@ -541,7 +553,9 @@ function isColumnNotFoundError(
 
 /* ======================
    LEGG TIL UTSTYR
-====================== */
+   - `addEquipment()` leser input-feltene og oppretter en ny rad i `equipment`.
+   - Funksjonen validerer at begge felt er utfylt og håndterer eventuelle DB-feil.
+*/
 
 // Legger nytt utstyr inn i databasen.
 async function addEquipment() {
