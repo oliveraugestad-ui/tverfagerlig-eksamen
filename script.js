@@ -256,7 +256,6 @@ async function authorizeAdminPage() {
     adminPage.innerHTML = `
         <h1>Ingen tilgang</h1>
         <p>Du har ikke tilgang til denne siden.</p>
-        <p>Logg inn som admin eller oliver@augestad.me for å få tilgang.</p>
     `;
 }
 
