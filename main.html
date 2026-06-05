@@ -4,34 +4,40 @@
     <meta charset="UTF-8">
     <title>Utstyr</title>
 
+    <!-- Laster inn CSS for styling av siden -->
     <link rel="stylesheet" href="style.css">
 
-    <!-- Supabase -->
+    <!-- Supabase JavaScript-bibliotek for autentisering og database -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
 <div class="top-row">
     <h1>Utstyr</h1>
+    <!-- Knapp for å bytte tema mellom lys og mørk modus -->
     <button id="themeToggleBtn" class="theme-btn">Mørk modus</button>
 </div>
 
 <h2>Legg til nytt utstyr</h2>
+<!-- Skjema for å legge til nytt utstyr i databasen -->
 <input id="equipName" placeholder="Navn på utstyr">
 <input id="equipNumber" placeholder="Utstyrsnummer (f.eks APL-001)">
 <button id="addBtn">Legg til</button>
 
 <hr>
 
+<!-- Tabellen som viser utstyrslisten -->
 <div class="item-row header-row">
     <div class="cell">Navn</div>
     <div class="cell">Utstyrsnummer</div>
-    <div class="cell">Lånt av / når</div>
+    <div class="cell">Tid utlånt</div>
     <div class="cell">Status</div>
 </div>
 
+<!-- Her vil JavaScript legge til hver utstyrslinje -->
 <div class="grid" id="equipmentGrid"></div>
 
+<!-- Egen JavaScript som håndterer autentisering, utstyrslasting og lagring -->
 <script src="script.js"></script>
 </body>
 </html>

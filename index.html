@@ -4,26 +4,34 @@
     <meta charset="UTF-8">
     <title>Innlogging</title>
 
+    <!-- Gjør siden mobilvennlig ved å skalere etter skjermbredde -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
 
 <h2>Innlogging</h2>
 
+<!-- Brukerens e-post / brukernavn -->
 <input type="text" id="username" placeholder="Brukernavn">
 <br><br>
 
+<!-- Brukerens passord -->
 <input type="password" id="password" placeholder="Passord">
 <br><br>
 
+<!-- Knapper for innlogging og registrering -->
 <button id="loginBtn">Logg inn</button>
 <button id="registerBtn">Registrer</button>
+
+<!-- Knapp for å bytte tema mellom lys og mørk modus -->
 <button id="themeToggleBtn" class="theme-btn">Mørk modus</button>
 
+<!-- Viser eventuelle feilmeldinger til brukeren -->
 <p id="error"></p>
 
+<!-- Supabase JavaScript-bibliotek for autentisering og database -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- Link til JavaScript-filen -->
+<!-- Egen JavaScript som håndterer logikk og oppdaterer siden -->
 <script src="script.js"></script>
 
 </body>
